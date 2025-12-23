@@ -704,6 +704,7 @@ def verify_snr_post_generation(snapshots, snapshot_metadata, full_metadata):
     
     return snr_map
 
+# Realistic traffic (for example: Standard 90/10 distribution) 
 # To obtain equal representation of all signal classes returns dictionary mapping snapshot index to measured SNR.
 def generate_balanced_dataset(target_per_class=200, save_path="lamp_mmv_dataset.pkl"):
 
