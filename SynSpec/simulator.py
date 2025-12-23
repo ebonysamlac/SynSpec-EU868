@@ -316,8 +316,7 @@ def apply_coexistence_constraints(lora, ieee, lora_meta, ieee_meta, fs):
 
 # --- FRAME GENERATION CONTROLLER ---
 
-# Main controller for generating LPWAN signal frames.
-# Handles LoRa, IEEE, mixture, and noise types with regulatory compliance.
+# Main controller for generating LPWAN signal frames. Handles LoRa, IEEE, mixture, and noise types with regulatory compliance.
 def generate_lpwan_spectrum_frame(fs, signal_type, band_id, band_info, dc_violation,
                                    prev_tech, symbol_memory, frame_len):
 
@@ -409,8 +408,7 @@ def generate_lpwan_spectrum_frame(fs, signal_type, band_id, band_info, dc_violat
 
 # --- MAIN DATASET GENERATOR ---
 
-# Generates a complete LPWAN spectrum sequence with overlapping snapshots.
-# Implements proper SNR control via caached buffer technique.
+# Generates a complete LPWAN spectrum sequence with overlapping snapshots. Implements proper SNR control via caached buffer technique.
 def generate_lpwan_spectrum_dataset_with_snapshots(
     fs=1e6, seq_len=1.0, min_frames=8, max_frames=20, region='EU',
     snr_db=10, snapshot_len_sec=0.1, overlap_sec=0.05, gap_scale=0.02, jitter_max=0.02
@@ -682,10 +680,11 @@ def extract_detailed_metadata(snap_meta, full_metadata, snapshot, fs):
         meta['center_frequency'] = 868.0e6
 
     return meta
+
+
  # --- VERIFICATION & TESTING ---
 
-# Verify SNR for each snapshot using the cached buffer and 
-# returns dictionary mapping snapshot index to measured SNR.
+# Verify SNR for each snapshot using the cached buffer and returns dictionary mapping snapshot index to measured SNR.
 def verify_snr_post_generation(snapshots, snapshot_metadata, full_metadata):
     snr_map = {}
     global_noise_power = full_metadata.get('noise_power', None)
@@ -705,8 +704,7 @@ def verify_snr_post_generation(snapshots, snapshot_metadata, full_metadata):
     
     return snr_map
 
-# To obtain equal representation of all signal classes
-# returns dictionary mapping snapshot index to measured SNR.
+# To obtain equal representation of all signal classes returns dictionary mapping snapshot index to measured SNR.
 def generate_balanced_dataset(target_per_class=200, save_path="lamp_mmv_dataset.pkl"):
 
     all_snapshots = []
@@ -821,5 +819,5 @@ if __name__ == "__main__":
     torch.manual_seed(42)
     generate_balanced_dataset(
         target_per_class=1000,
-        save_path="lamp_mmv_robust10dbFthird1.pkl"
+        save_path="robust10db.pkl"
     )
