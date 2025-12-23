@@ -119,9 +119,9 @@ def create_splits(X, y):
     return train_ds, val_ds, test_ds
 
 # MODEL 
-class SimpleClassifier(nn.Module):
+class RegClassifier(nn.Module):
     def __init__(self, num_classes):
-        super(SimpleClassifier, self).__init__()
+        super(RegClassifier, self).__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size=3, padding=1)
         self.relu = nn.ReLU()
         self.pool = nn.MaxPool2d(2, 2) 
@@ -151,7 +151,7 @@ def train_model():
     val_loader = DataLoader(val_ds, batch_size=BATCH_SIZE)
     test_loader = DataLoader(test_ds, batch_size=BATCH_SIZE)
     
-    model = SimpleClassifier(num_classes=len(class_names)).to(device)
+    model = RegClassifier(num_classes=len(class_names)).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
     
