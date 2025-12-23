@@ -2,9 +2,9 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-def analyze_lpwan_dataset(pkl_path):
-    """Generate comprehensive dataset report matching the new simulator structure"""
-    
+# Generate comprehensive dataset analysis report
+
+def analyze_lpwan_dataset(pkl_path):    
     try:
         with open(pkl_path, 'rb') as f:
             data = pickle.load(f)
@@ -24,7 +24,7 @@ def analyze_lpwan_dataset(pkl_path):
     print(f"LPWAN Dataset Report: {pkl_path}")
     print("=" * 60)
     
-    # 1. Class Balance
+    #Class Balance
     print("\n1. Class Distribution:")
     total_snaps = sum(counts.values())
     for cls, cnt in counts.items():
