@@ -8,4 +8,4 @@ Please follow the instructions.
 Usage
 Clone the repository: git clone https://github.com/ebonysamlac/SynSpec-EU868.git
 
-use the two simulator.py file to generate the dataset.
+use the simulator.py file to generate the dataset.
