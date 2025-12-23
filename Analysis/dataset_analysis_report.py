@@ -136,4 +136,4 @@ def analyze_lpwan_dataset(pkl_path):
     plt.show()
 
 if __name__ == '__main__':
-    analyze_lpwan_dataset('lamp_mmv_robust10dbFthird1.pkl')
+    analyze_lpwan_dataset('robust10db.pkl')
