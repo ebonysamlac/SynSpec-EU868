@@ -89,7 +89,7 @@ If you use this simulator or the generated datasets in your research, please cit
 
       @simdataset {ebo2025lpwan,
 
-      author       = {Ebo, Ife Olalekan},
+      author       = {Ebo Ife Olalekan, Idowu, Ajayi, Lina Mroueh, and Youmni Ziade},
   
       title        = {Regulatory-Aware Synthetic Spectrum Generation for LoRa and IEEE 802.15.4g Coexistence},
   
