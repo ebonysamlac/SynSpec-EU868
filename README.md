@@ -99,3 +99,6 @@ If you use this simulator or the generated datasets in your research, please cit
   
       publisher    = {Zenodo}
       }
+
+### Contact: 
+For questions, email: ioebo@isep.fr
