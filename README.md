@@ -79,7 +79,7 @@ use the simulator.py file to generate the dataset.
 python SynSpec/simulator.py --target_per_class 1000 --save_path dataset.pkl
 
 ## Dataset
-The dataset generated for validation is hosted on Zenodo:
+The dataset generated for validation of the simulator is hosted on Zenodo:
 https://doi.org/10.5281/zenodo.18036026
 
 # 📜 Citation & License
