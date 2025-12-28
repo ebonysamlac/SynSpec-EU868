@@ -14,6 +14,9 @@ def find_specific_example(metadata, snapshots, label_filter, condition):
     for i, meta in enumerate(metadata):
         if label_filter not in meta['label']:
             continue
+        if label_filter in ['ieee', 'lora']:
+             if condition == 'bw' and label_filter == 'ieee':
+                 continue
             
         rogue = meta.get('rogue_details', {})
         is_dc = meta.get('duty_cycle_violation', False)
