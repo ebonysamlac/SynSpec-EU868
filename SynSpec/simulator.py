@@ -539,6 +539,7 @@ def extract_detailed_metadata(snap_meta, full_metadata, snapshot, fs):
             "center_freq": f_meta['center_frequency'],
             "bw": (f_meta.get('lora_params') or {}).get('BW') or \
                   (f_meta.get('ieee_params') or {}).get('symbol_rate') or 0,
+            "sf": lora_p.get('SF'), 
             "is_rogue": f_meta['is_rogue'],
             "violation_type": violation_type,
             "time_overlap_ratio": c['overlap_ratio']
