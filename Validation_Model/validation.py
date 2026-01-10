@@ -250,6 +250,6 @@ if __name__ == "__main__":
         plt.title('Training Dynamics: Signal vs. Regulatory Tasks')
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
-        plt.savefig('combined_training_dynamics_15db.png')
+        plt.savefig('combined_training_dynamics_10db.png')
         plt.show()
-        print("\nSaved combined plot to 'combined_training_dynamics_15db.png'")
+        print("\nSaved combined plot to 'combined_training_dynamics_10db.png'")
