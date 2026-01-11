@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def get_band_from_freq(freq_hz):
+    """Helper to map frequency back to EU Band ID"""
     f_mhz = freq_hz / 1e6
     if 865.0 <= f_mhz < 868.0:
         return 'Band L (865-868)'
@@ -27,7 +28,7 @@ def analyze_lpwan_dataset(pkl_path):
     counts = data['counts']
     print("=" * 60)
     print(f"LPWAN Dataset Report: {pkl_path}")
-    print("=" * 60)    
+    print("=" * 60)
     bands = []
     for m in metas:
         if m.get('center_frequency'):
@@ -36,8 +37,10 @@ def analyze_lpwan_dataset(pkl_path):
             bands.append('Unknown')
     ieee_bws = []
     lora_bws = []
+    sf_dist = []  
     rogue_count = 0
     clean_count = 0
+    
     for m in metas:
         is_snapshot_rogue = False
         if 'objects' in m:
@@ -46,8 +49,10 @@ def analyze_lpwan_dataset(pkl_path):
                     ieee_bws.append(obj['bw'] / 1e3) # kHz
                 elif obj['class'] == 'lora':
                     lora_bws.append(obj['bw'] / 1e3) # kHz
+                    if obj.get('sf'):
+                        sf_dist.append(obj['sf'])                
                 if obj['is_rogue']:
-                    is_snapshot_rogue = True
+                    is_snapshot_rogue = True        
         if is_snapshot_rogue:
             rogue_count += 1
         else:
@@ -63,8 +68,8 @@ def analyze_lpwan_dataset(pkl_path):
     print(f"   Compliant Snapshots: {clean_count:5d} ({clean_count/len(metas)*100:.1f}%)")
     print(f"   Rogue/Violating:     {rogue_count:5d} ({rogue_count/len(metas)*100:.1f}%)")
 
-    # VISUALIZATION 
-    fig, axes = plt.subplots(2, 4, figsize=(24, 10))
+    # Visualize
+    fig, axes = plt.subplots(3, 4, figsize=(24, 15)) 
     fig.suptitle(f"Dataset Analysis: {pkl_path}", fontsize=16)
     axes[0,0].bar(counts.keys(), counts.values(), color='skyblue', edgecolor='black')
     axes[0,0].set_title('1. Class Balance')
@@ -96,6 +101,7 @@ def analyze_lpwan_dataset(pkl_path):
             for obj in m['objects']:
                 if obj.get('violation_type'):
                     viol_types.append(obj['violation_type'])
+    
     if viol_types:
         v_counts = {v: viol_types.count(v) for v in set(viol_types)}
         axes[1,2].bar(v_counts.keys(), v_counts.values(), color='red', alpha=0.7)
@@ -113,11 +119,20 @@ def analyze_lpwan_dataset(pkl_path):
     axes[1,3].set_title(f'8. Example: {metas[snap_idx]["label"]}')
     axes[1,3].grid(alpha=0.3)
     axes[1,3].set_ylim(-40, 60)
+    if sf_dist:
+        axes[2,0].hist(sf_dist, bins=np.arange(6.5, 13.5, 1), color='gold', edgecolor='black', alpha=0.7)
+        axes[2,0].set_title('9. LoRa Spreading Factors')
+        axes[2,0].set_xlabel('SF')
+        axes[2,0].set_xticks(range(7, 13))
+    else:
+        axes[2,0].text(0.5, 0.5, "No SF Data", ha='center')        
+    axes[2,1].axis('off')
+    axes[2,2].axis('off')
+    axes[2,3].axis('off')
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     save_name = 'dataset_analysis10db.png'
     plt.savefig(save_name, dpi=150)
     print(f"\nSaved analysis to '{save_name}'")
     plt.show()
-
 if __name__ == '__main__':
     analyze_lpwan_dataset('robust10db.pkl')
