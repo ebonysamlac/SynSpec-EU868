@@ -24,7 +24,7 @@ EU_BAND_PARAMS = {
 }
 
 # --- PHYSICS UTILITIES ---
-# USE HANN WINDOW RAMP (FOR POWER AMPLIFIER) TO PREVENT SPECTRAL SPLATTER
+# Use Hann window
 def apply_pa_ramp(frame, fs, ramp_time=10e-6):
     ramp_samples = int(ramp_time * fs)
     if ramp_samples * 2 >= len(frame):
@@ -35,7 +35,7 @@ def apply_pa_ramp(frame, fs, ramp_time=10e-6):
     frame[-ramp_samples:] *= ramp[ramp_samples:]
     return frame
 
-# SINGLE TAP RAYLEIGH CHANNEL TO SIMULATE UNIFORM AMPLITUDE ATTENTUATION AND PHASE SHIFT ACROSS BAND
+# 
 def apply_flat_fading(signal):
     if len(signal) < 1:
         return signal
@@ -45,8 +45,6 @@ def apply_flat_fading(signal):
     h = torch.complex(h_real, h_imag) / np.sqrt(2)
     return signal * h
 
-# --- REGULATORY LOGIC ---
-# Determines non-compliant behavior (BW, OOB, ERP)
 def get_rogue_parameters(band_info, signal_type, p_rogue=0.10):
     is_rogue = np.random.rand() < p_rogue
     violations = {
@@ -108,9 +106,6 @@ def select_lpwan_signal_type(tech_history):
         return tech_history[-1]
     return np.random.choice(['lora', 'ieee', 'mixture', 'noise'], p=[LOR_P, IEE_P, MIX_P, NOI_P])
 
-# --- WAVEFORM GENERATORS ---
-# LoRa signal generator with continuous phase tracking ------
-# Implements proper frequency wrapping and phase accumulation -----
 def generate_lora_signal(fs, frame_len, band_info, cf, prev_tech, last_phase, dc_violation, forced_bw=None):
     if forced_bw is not None:
         BW = forced_bw
@@ -157,8 +152,6 @@ def generate_lora_signal(fs, frame_len, band_info, cf, prev_tech, last_phase, dc
     
     return frame, metadata
 
-# --- IEEE 802.15.4g GFSK signal generator with proper Gaussian filtering. ---
-# --- Symbol rate constrained to bandwidth limits. ---
 def generate_ieee_signal(fs, frame_len, band_info, cf, prev_tech, last_phase, dc_violation):
     allowed_bw = band_info['max_bw']
     if allowed_bw >= 500e3:
@@ -176,7 +169,6 @@ def generate_ieee_signal(fs, frame_len, band_info, cf, prev_tech, last_phase, dc
     freq_dev = (mod_index * symbol_rate) / 2
     num_symbols = max(1, frame_len // samples_per_symbol)    
     symbols = torch.randint(0, 2, (num_symbols,), device=device, dtype=torch.float32) * 2 - 1
-    # Create Gaussian pulse shaping filter
     t_pulse = torch.arange(-3 * samples_per_symbol, 3 * samples_per_symbol + 1,
                            device=device, dtype=torch.float32) / fs
     gaussian_std = np.sqrt(np.log(2)) / (2 * np.pi * BT * symbol_rate)
@@ -212,9 +204,6 @@ def generate_ieee_signal(fs, frame_len, band_info, cf, prev_tech, last_phase, dc
     }
     return frame, metadata
 
-
-# Creates realistic coexistence scenarios between LoRa and IEEE signals
-# Models power ratio, frequency separation, and timing offset.
 def apply_coexistence_constraints(lora, ieee, lora_meta, ieee_meta, fs):
     min_len = min(len(lora), len(ieee))
     if min_len == 0:
@@ -248,8 +237,7 @@ def apply_coexistence_constraints(lora, ieee, lora_meta, ieee_meta, fs):
     }
     return mixed, coex_metadata
 
-# --- FRAME GENERATION  ---
-# Main controller for generating LPWAN signal frames. Handles LoRa, IEEE, mixture, and noise types with regulatory compliance.
+# Generate frame  
 def generate_lpwan_spectrum_frame(fs, signal_type, band_id, band_info, dc_violation,
                                    prev_tech, symbol_memory, frame_len):
     if signal_type == 'noise':
@@ -325,16 +313,13 @@ def generate_lpwan_spectrum_frame(fs, signal_type, band_id, band_info, dc_violat
     
     return frame, metadata, symbol_memory
 
-# --- DATASET GENERATOR ---
-# Generates a complete LPWAN spectrum sequence with overlapping snapshots. 
-# This Implements proper SNR control via caached buffer technique.
+# Generate dataset
 def generate_lpwan_spectrum_dataset_with_snapshots(
     fs=1e6, seq_len=1.0, min_frames=8, max_frames=20, region='EU',
     snr_db=10, snapshot_len_sec=0.1, overlap_sec=0.05, gap_scale=0.02, jitter_max=0.02
 ):
     seq_samples = int(seq_len * fs)    
     sequence = torch.zeros(seq_samples, dtype=torch.complex64, device=device)
-    # initilize cached buffer
     clean_sequence = torch.zeros(seq_samples, dtype=torch.complex64, device=device)
     
     full_metadata = {
@@ -363,13 +348,11 @@ def generate_lpwan_spectrum_dataset_with_snapshots(
         dc_accumulator = np.random.uniform(0.5 * limit, 0.9 * limit)
     else:
         dc_accumulator = np.random.uniform(0.9 * limit, 1.1 * limit)
-
     current_sample = 0
     tech_history = deque(maxlen=5)
     symbol_memory = {'lora': None, 'ieee': None}
     frame_count = 0
     prev_tech = None
-
     while current_sample < seq_samples and frame_count < max_frames:
         gap = int(np.random.exponential(gap_scale * fs))
         current_sample += gap
@@ -404,7 +387,6 @@ def generate_lpwan_spectrum_dataset_with_snapshots(
             prev_tech, symbol_memory, frame_len
         )
         end_idx = min(current_sample + frame_len, seq_samples)
-
         if frame is None:
             frame_meta['boundary'] = {'start': current_sample, 'end': end_idx}
             frame_meta['frame_duration'] = frame_duration
@@ -484,10 +466,8 @@ def generate_lpwan_spectrum_dataset_with_snapshots(
         snapshots = torch.stack(snapshots)
     else:
         snapshots = torch.empty((0, snapshot_len_samples), dtype=torch.complex64, device=device)
-    
     return snapshots, snapshot_metadata, full_metadata
 
-# Generate labels for snapshots based on contained frames (noise, lora, ieee, mixture-cochannel, mixture-adjacent).
 def label_snapshots(snapshot_metadata, full_metadata):
     labels = []
     for snap_meta in snapshot_metadata:
@@ -516,51 +496,75 @@ def label_snapshots(snapshot_metadata, full_metadata):
                 dur = c['overlap'][1] - c['overlap'][0]
                 durations[c['type']] = durations.get(c['type'], 0) + dur
             labels.append(max(durations, key=durations.get))
-
     return labels
 
-
-# Captures Rogues, SNR, AND Coexistence Ratios.
 def extract_detailed_metadata(snap_meta, full_metadata, snapshot, fs):
     objects = []
-    coex_params = None      
+    coex_params = None 
+    anchor_freq = 868.0e6 
     for c in snap_meta['contained_frames']:
         frame_idx = c['frame_idx']
-        f_meta = full_metadata['frames'][frame_idx]
+        f_meta = full_metadata['frames'][frame_idx]        
+        anchor_freq = f_meta['center_frequency']        
         if coex_params is None and f_meta.get('coex_params'):
             coex_params = f_meta['coex_params']
-        rogue_info = f_meta.get('rogue_details', {})
-        violation_type = None
-        if rogue_info.get('bw_violation'): violation_type = 'bw'
-        elif rogue_info.get('oob_violation'): violation_type = 'oob'
-        elif rogue_info.get('erp_violation'): violation_type = 'erp'
-        obj = {
-            "class": f_meta['signal_type'],
-            "center_freq": f_meta['center_frequency'],
-            "bw": (f_meta.get('lora_params') or {}).get('BW') or \
-                  (f_meta.get('ieee_params') or {}).get('symbol_rate') or 0,
-            "sf": lora_p.get('SF'), 
-            "is_rogue": f_meta['is_rogue'],
-            "violation_type": violation_type,
-            "time_overlap_ratio": c['overlap_ratio']
-        }
-        objects.append(obj)
+        rogue = f_meta.get('rogue_details', {})
+        is_bw_viol = rogue.get('bw_violation', False)
+        is_oob_viol = rogue.get('oob_violation', False)
+        is_erp_viol = rogue.get('erp_violation', False)
+        if f_meta['signal_type'] == 'mixture':            
+            lora_obj = {
+                "class": "lora",
+                "center_freq": f_meta['center_frequency'],
+                "bw": f_meta['lora_params']['BW'],
+                "sf": f_meta['lora_params']['SF'],
+                "is_rogue": f_meta['is_rogue'],
+                "violation_type": "bw" if is_bw_viol else ("oob" if is_oob_viol else ("erp" if is_erp_viol else None)),
+                "time_overlap_ratio": c['overlap_ratio']
+            }
+            objects.append(lora_obj)
+            freq_offset = f_meta['coex_params']['freq_separation']
+            ieee_obj = {
+                "class": "ieee",
+                "center_freq": f_meta['center_frequency'] + freq_offset,
+                "bw": f_meta['ieee_params']['symbol_rate'], 
+                "sf": None,
+                "is_rogue": is_oob_viol or is_erp_viol, 
+                "violation_type": "oob" if is_oob_viol else ("erp" if is_erp_viol else None),
+                "time_overlap_ratio": c['overlap_ratio']
+            }
+            objects.append(ieee_obj)
+        else:
+            lora_p = f_meta.get('lora_params') or {}
+            ieee_p = f_meta.get('ieee_params') or {}
+            v_type = None
+            if is_bw_viol: v_type = 'bw'
+            elif is_oob_viol: v_type = 'oob'
+            elif is_erp_viol: v_type = 'erp'
+            obj = {
+                "class": f_meta['signal_type'],
+                "center_freq": f_meta['center_frequency'],
+                "bw": lora_p.get('BW') or ieee_p.get('symbol_rate') or 0,
+                "sf": lora_p.get('SF'), 
+                "is_rogue": f_meta['is_rogue'],
+                "violation_type": v_type,
+                "time_overlap_ratio": c['overlap_ratio']
+            }
+            objects.append(obj)
     meta = {
-        "snapshot_index": snap_meta['index'],        
-        "objects": objects,
+        "snapshot_index": snap_meta['index'],
+        "objects": objects, 
         "coexistence_descriptors": coex_params,
         "snr_db": snap_meta.get('verified_snr'),
         "band_id": snap_meta.get('band_id', 'Unknown'),
         "signal_power": snap_meta.get('clean_power', 0.0),
-        "label": snap_meta['label'], 
-        "center_frequency": objects[0]['center_freq'] if objects else 868.0e6,
+        "label": snap_meta['label'],         
+        "center_frequency": anchor_freq, 
         "is_compliant": not any(o['is_rogue'] for o in objects)
     }
     return meta
 
-
- # --- VERIFICATION & TESTING ---
-# Verify SNR for each snapshot using the cached buffer and returns dictionary mapping snapshot index to measured SNR.
+#
 def verify_snr_post_generation(snapshots, snapshot_metadata, full_metadata):
     snr_map = {}
     global_noise_power = full_metadata.get('noise_power', None)
@@ -576,8 +580,7 @@ def verify_snr_post_generation(snapshots, snapshot_metadata, full_metadata):
                 snr_map[meta['index']] = snr
     return snr_map
 
-# Realistic traffic (for example: Standard 90/10 distribution) 
-# To obtain equal representation of all signal classes returns dictionary mapping snapshot index to measured SNR.
+
 def generate_balanced_dataset(target_per_class=200, save_path="lamp_mmv_dataset.pkl"):
     all_snapshots = []
     all_metadata = []
@@ -660,7 +663,7 @@ def generate_balanced_dataset(target_per_class=200, save_path="lamp_mmv_dataset.
     print(f"Saved to: {save_path}")
     return dataset
  
-    # --- MAIN EXECUTION ---
+    # Execute main
 if __name__ == "__main__":
     np.random.seed(42)
     torch.manual_seed(42)
