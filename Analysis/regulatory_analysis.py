@@ -1,12 +1,10 @@
-
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 import os
 
-# CONFIGURATION 
-FILE_PATH = "robust10db.pkl" 
+FILE_PATH = "robust10db.pkl"  # provide dataset path
 FS = 1e6
 
 def find_specific_example(metadata, snapshots, label_filter, condition):
@@ -16,7 +14,7 @@ def find_specific_example(metadata, snapshots, label_filter, condition):
             
         if label_filter == 'ieee' and condition == 'bw':
             continue
-          
+            
         is_dc = meta.get('duty_cycle_violation', False)
         is_bw = False
         is_oob = False
@@ -46,8 +44,10 @@ def find_specific_example(metadata, snapshots, label_filter, condition):
             if is_oob: match = True
         elif condition == 'erp':
             if is_erp: match = True
+            
         if match:
             return snapshots[i], meta
+            
     return None, None
 
 def plot_spectrogram(ax, sig, fs, title, caption_text):
@@ -67,37 +67,29 @@ def plot_spectrogram(ax, sig, fs, title, caption_text):
     props = dict(boxstyle='round', facecolor='white', alpha=0.9)
     ax.text(0.05, 0.95, caption_text, transform=ax.transAxes, fontsize=7,
             verticalalignment='top', bbox=props, fontfamily='monospace')
+            
     return im
 
 def generate_caption(meta, condition):
     lines = []    
     lines.append(f"Band: {meta.get('band_id', '?')}")
-    if 'objects' in meta and meta['objects']:
-        freq = meta['objects'][0]['center_freq'] / 1e6
-    else:
-        freq = meta.get('center_frequency', 868e6) / 1e6
+    freq = meta.get('center_frequency', 868e6) / 1e6
     lines.append(f"Freq: {freq:.2f} MHz")
-    if 'objects' in meta:
-        for obj in meta['objects']:
-            cls = obj['class']
-            bw = obj.get('bw', 0) / 1e3
-            if cls == 'lora':
-                # Note: SF might not be in the lightweight obj dict unless explicitly added.
-                # We display what we have.
-                lines.append(f"LoRa: BW{bw:.0f} kHz")
-            elif cls == 'ieee':
-                lines.append(f"IEEE: {bw:.0f} ksym/s")
     
-    # Legacy Fallback
-    elif 'lora_params' in meta:
-        if meta.get('lora_params'):
-            bw = meta['lora_params'].get('BW', 0) / 1e3
-            lines.append(f"LoRa: BW{bw:.0f} kHz")
-        if meta.get('ieee_params'):
-            rate = meta['ieee_params'].get('symbol_rate', 0) / 1e3
-            lines.append(f"IEEE: {rate:.0f} kbps")
-        
-    # Violation Highlight
+    if 'objects' in meta:
+        for i, obj in enumerate(meta['objects']):
+            cls = obj['class']
+            bw = obj.get('bw', 0)            
+            freq_str = ""
+            if len(meta['objects']) > 1:
+                offset_khz = (obj['center_freq'] - meta['center_frequency']) / 1e3
+                freq_str = f"[@{offset_khz:+.0f}k] "
+            if cls == 'lora':
+                sf = obj.get('sf')
+                sf_str = f"SF{sf}" if sf else ""
+                lines.append(f"LoRa: {sf_str} BW{bw/1e3:.0f}kHz")                
+            elif cls == 'ieee':
+                lines.append(f"IEEE: {bw/1e3:.0f} kbps")    
     if condition == 'compliant':
         lines.append("[ COMPLIANT ]")
     elif condition == 'bw':
@@ -108,8 +100,8 @@ def generate_caption(meta, condition):
         lines.append("!! OOB VIOL !!")
     elif condition == 'erp':
         lines.append("!! ERP VIOL !!")
-        
     return "\n".join(lines)
+
 
 def run_visualization():
     print(f"Loading {FILE_PATH}...")
@@ -123,7 +115,6 @@ def run_visualization():
     snapshots = data['snapshots']
     metadata = data['metadata']
     print(f"Loaded {len(snapshots)} snapshots.")
-    
     conditions = [
         ('compliant', 'Compliant'),
         ('bw', 'Bandwidth Viol'),
@@ -131,25 +122,19 @@ def run_visualization():
         ('oob', 'Out-of-Band Viol'),
         ('erp', 'ERP (Power) Viol')
     ]
-    
     signal_types = [
         ('lora', 'LoRa Signal'),
         ('ieee', 'IEEE 802.15.4g'),
         ('mixture-cochannel', 'Co-Channel Mix'),
         ('mixture-adjacent', 'Adj-Channel Mix')
     ]
-    
     fig, axes = plt.subplots(5, 4, figsize=(20, 18))
     plt.subplots_adjust(hspace=0.5, wspace=0.3)
-    
     fig.suptitle(f"Spectrum Violation Analysis: {FILE_PATH}", fontsize=16, y=0.98)
-    
     for row, (cond_key, cond_name) in enumerate(conditions):
         for col, (sig_key, sig_name) in enumerate(signal_types):
             ax = axes[row, col]
-            
             sig, meta = find_specific_example(metadata, snapshots, sig_key, cond_key)
-            
             if sig is not None:
                 caption = generate_caption(meta, cond_key)
                 title = f"{sig_name}\n({cond_name})"
@@ -159,7 +144,7 @@ def run_visualization():
                 ax.set_title(f"{sig_name}\n({cond_name})")
                 ax.axis('off')
                 
-    save_name = "corrected10db.png"
+    save_name = "10dbspectrogramplot.png" # provide name to save plot with
     plt.savefig(save_name, dpi=150, bbox_inches='tight')
     print(f"Success! Matrix plot saved to '{save_name}'")
     plt.show()
