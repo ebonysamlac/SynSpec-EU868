@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from scipy import signal
 import os
 
-FILE_PATH = "robust10db.pkl"  # provide dataset path
+FILE_PATH = "dataset.pkl"  # provide dataset path
 FS = 1e6
 TARGET_SNAPSHOT_ID = 490  # provide the snapshot id to be inspected
 
