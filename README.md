@@ -21,8 +21,8 @@ The simulator exports datasets as serialized Python objects (.pkl files) contain
 Each pickle file contains a dictionary with two main keys:
 
 data = {
-    'snapshots': [ ... ],  # List of raw IQ samples (complex64)
-                           # Shape: (N_samples, sequence_length)
+    
+    'snapshots': [ ... ],  # List of raw IQ samples (complex64), Shape: (N_samples, sequence_length)
 
     'metadata': [          # List of dictionaries (one per snapshot)
         {
