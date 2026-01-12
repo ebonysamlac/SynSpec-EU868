@@ -69,64 +69,51 @@ data = {
 ## Metadata Dictionary Keys
 Each entry provides the exact parametric ground truth required for training.
 
-   | Key                   | Type     | Description                                                            |
-   |-----------------------|----------|------------------------------------------------------------------------|
-   | label                 | str      | Signal class: lora, ieee, mixture-cochannel, mixture-adjacent, noise.  |
-   | snr_db                | float    | Verified Signal-to-Noise Ratio (dB) of the snapshot.                            |
-   | is_compliant          | bool     | True if all objects in the snapshot comply with ETSI regulations. |
-   | objects               | list     | A list of dictionaries where each dictionary describes a single signal instance (see below).|
-   | center_frequency      | float    | The center frequency (Hz) of the receiver window.|
-   | coexistence_descriptors| dict    | Contains delta P (power ratio) and delta f (freq separation) forr mixture frames.|
+| Key                    | Type  | Description                                                                                 |
+|------------------------|-------|---------------------------------------------------------------------------------------------|
+| label                  | str   | Signal class: lora, ieee, mixture-cochannel, mixture-adjacent, noise.                       |
+| snr_db                 | float | Verified Signal-to-Noise Ratio (dB) of the snapshot.                                        |
+| is_compliant           | bool  | True if all objects in the snapshot comply with ETSI regulations.                           |
+| objects                | list  | List of dictionaries where each dictionary describes a single signal instance (see below).  |
+| center_frequency       | float | Center frequency (Hz) of the receiver window.                                               |
+| coexistence_descriptors| dict  | Contains delta P (power ratio) and delta f (freq separation) forr mixture frames.           |
 
 ## Object Dictionary Keys (Inside 'objects' list)
 
-   | Key                   | Description                                                            |
-   |-----------------------|------------------------------------------------------------------------|
-   | class                 | Signal teechnology (lora, ieee).                                |
-   | center_freq           | Exact center frequency of this specific signal instance.          |
-   | bw                    | Bandwidth (Hz) or Symbol Rate (Hz) for IEEE 802.15.4g.                                       |
-   | sf                    | Spreading Factor (LoRa only).                       |
-   | is_rogue              | True if this specific object violates a regulation.                     |
-   | violation_type        | Specifi violation category 'bw', 'oob', 'erp', or None.                     |
+   | Key                   | Description                                               |
+   |-----------------------|-----------------------------------------------------------|
+   | class                 | Signal teechnology (lora, ieee).                          |
+   | center_freq           | Exact center frequency of this specific signal instance.  |
+   | bw                    | Bandwidth (Hz) or Symbol Rate (Hz) for IEEE 802.15.4g.    |
+   | sf                    | Spreading Factor (LoRa only).                             |
+   | is_rogue              | True if this specific object violates a regulation.       |
+   | violation_type        | Specifi violation category 'bw', 'oob', 'erp', or None.   |
    
 
 # Installation
 Please follow the instructions.
 
-## Install dependencies
-pip install -r requirements.txt
+1. Clone the repository
+    git clone [https://github.com/ebonysamlac/SynSpec-EU868.git](https://github.com/ebonysamlac/SynSpec-EU868.git)
+    cd SynSpec-EU868
+
+2. Install dependencies
+    pip install -r requirements.txt
 
 ## Requirements:
  - numpy
  - scipy
- - torch (for GPU acceleration and tensor operations)
+ - torch (for GPU acceleration)
  - matplotlib (for visualization)
- - pandas (for logging)
+ - pandas (for logging/analysis)
 
-## Data Structure
-1. Snapshots (snapshots)
-   
-    - Format: Complex-valued NumPy arrays (or PyTorch tensors).
-
-    - Content: Raw IQ samples ($I + jQ$) representing the baseband signal after channel impairments.
-  
-    - Shape: (Sequence_Length,) (e.g., 20,000 samples).
-
-2. Metadata (metadata)
-   Each entry provides the exact parametric ground truth required.
+## 🛠 Usage
+To generate a balanced dataset, run the simulator script directly. You can specify the number of samples per class and the target SNR.
+    python SynSpec/simulator.py --target_per_class 1000 --snr_db 10 --save_path dataset_10db.pkl
 
 
-## Usage
-Clone the repository: git clone https://github.com/ebonysamlac/SynSpec-EU868.git
-
-To run the default main simulation script to generate dataset.
-
-use the simulator.py file to generate the dataset.
-
-python SynSpec/simulator.py --target_per_class 1000 --save_path dataset.pkl
-
-## Dataset
-The dataset generated for validation of the simulator is hosted on Zenodo:
+## 📂 Dataset
+A pre-generated validation dataset created with this tool is hosted on Zenodo:
 https://doi.org/10.5281/zenodo.18036026
 
 # 📜 Citation & License
@@ -134,18 +121,14 @@ This project is open-source under the MIT License.
 
 If you use this simulator or the generated datasets in your research, please cite:
 
-      @simdataset {ebo2025lpwan,
-
-      author       = {Ebo Ife Olalekan, Idowu, Ajayi, Lina Mroueh, and Youmni Ziade},
-  
+      @dataset{ebo2025lpwan,
+      author       = {Ebo, Ife Olalekan and Idowu, Ajayi and Mroueh, Lina and Ziade, Youmni},
       title        = {Regulatory-Aware Synthetic Spectrum Generation for LoRa and IEEE 802.15.4g Coexistence},
-  
       year         = {2025},
-  
+      publisher    = {Zenodo},
       doi          = {10.5281/zenodo.18036026},
-  
-      publisher    = {Zenodo}
-      }
+      url          = {[https://doi.org/10.5281/zenodo.18036026](https://doi.org/10.5281/zenodo.18036026)}
+}
 
 ### Contact: 
 For questions, email: ioebo@isep.fr
