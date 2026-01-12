@@ -6,6 +6,7 @@ import pickle
 import os
 import traceback
 import time
+import argparse
 import gc
 
 
@@ -662,12 +663,21 @@ def generate_balanced_dataset(target_per_class=200, save_path="lamp_mmv_dataset.
     print(f"Final counts: {counts}")
     print(f"Saved to: {save_path}")
     return dataset
- 
-    # Execute main
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="SynSpec-EU868 Dataset Generator")
+    parser.add_argument('--target_per_class', type=int, default=1000, help='Samples per class')
+    parser.add_argument('--save_path', type=str, default='dataset.pkl', help='Output filename')
+    parser.add_argument('--snr_db', type=float, default=10.0, help='Signal-to-Noise Ratio (dB)')
+    
+    args = parser.parse_args()
+    
+    # Set seeds for reproducibility
     np.random.seed(42)
     torch.manual_seed(42)
+    
+    print(f"Starting generation: {args.target_per_class} samples/class @ {args.snr_db}dB SNR")
     generate_balanced_dataset(
-        target_per_class=1000,
-        save_path="robust10db.pkl"
+        target_per_class=args.target_per_class,
+        save_path=args.save_path
     )
