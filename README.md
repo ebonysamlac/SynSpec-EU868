@@ -21,11 +21,44 @@ The simulator exports datasets as serialized Python objects (.pkl files) contain
 Each pickle file contains a dictionary with two main keys:
 
 data = {
+    'snapshots': [ ... ],  # List of raw IQ samples (complex64)
+                           # Shape: (N_samples, sequence_length)
 
-    'snapshots': [ ... ],  # List of raw IQ tensors/arrays
-    
-    'metadata':  [ ... ]   # List of dictionaries containing ground truth
-    
+    'metadata': [          # List of dictionaries (one per snapshot)
+        {
+            'snapshot_index': 42,
+            'label': 'mixture-cochannel',  #  class label
+            'snr_db': 10.5,
+            'center_frequency': 868000000.0,  
+            
+            'objects': [
+                {
+                    'class': 'lora',
+                    'center_freq': 868000000.0,
+                    'bw': 125000.0,
+                    'sf': 9,             # Spreading Factor (LoRa only)
+                    'is_rogue': True,
+                    'violation_type': 'bw',
+                    'time_overlap_ratio': 1.0
+                },
+                {
+                    'class': 'ieee',
+                    'center_freq': 868050000.0,
+                    'bw': 50000.0,       # Symbol Rate (Hz)
+                    'sf': None,
+                    'is_rogue': False,
+                    'violation_type': None,
+                    'time_overlap_ratio': 0.8
+                }
+            ],
+            
+            # Additional Context
+            'coexistence_descriptors': { ... }, # Delta-f, Delta-P for mixtures
+            'band_id': 'M',
+            'is_compliant': False
+        },
+        # ... more snapshots
+    ]
 }
 
 # Installation
