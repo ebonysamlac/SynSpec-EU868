@@ -3,9 +3,9 @@ import pickle
 import numpy as np
 import os
 
-FILE_PATH = "robust10db.pkl"  # add file path for the dataset
+FILE_PATH = "dataset.pkl"  # add file path for the dataset
 SHOW_ALL = False          
-SHOW_FIRST_N = 50         
+SHOW_FIRST_N = 50         # choose the number of snapshot to inspect
 FILTER_LABEL = 'ieee'  # None, 'lora', 'ieee', 'mixture', 'rogue' # choose the signal type
 
 def print_separator(char='-', length=80):
