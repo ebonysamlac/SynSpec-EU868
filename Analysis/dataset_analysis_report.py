@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def get_band_from_freq(freq_hz):
-    """Helper to map frequency back to EU Band ID"""
     f_mhz = freq_hz / 1e6
     if 865.0 <= f_mhz < 868.0:
         return 'Band L (865-868)'
@@ -135,4 +134,4 @@ def analyze_lpwan_dataset(pkl_path):
     print(f"\nSaved analysis to '{save_name}'")
     plt.show()
 if __name__ == '__main__':
-    analyze_lpwan_dataset('robust10db.pkl') # add dataset path
+    analyze_lpwan_dataset('dataset.pkl') # add dataset path
