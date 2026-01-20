@@ -66,6 +66,8 @@ data = {
     ]
 }
 
+```
+
 ## Metadata Dictionary Keys
 Each entry provides the exact parametric ground truth required for training.
 
